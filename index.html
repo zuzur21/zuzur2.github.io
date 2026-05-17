@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Погодная лента | стильное приложение</title>
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0b1120;
+            color: #f1f5f9;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.2), rgba(15, 23, 42, 0.95));
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(56,189,248,0.1)" fill-opacity="1" d="M0,192L48,197.3C96,203,192,213,288,208C384,203,480,181,576,186.7C672,192,768,224,864,234.7C960,245,1056,235,1152,213.3C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .app-wrapper {
+            max-width: 1400px;
+            width: 92%;
+            margin: 0 auto;
+            padding: 28px 24px 48px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 80px;
+            padding: 18px 32px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 15px 35px -12px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s;
+        }
+
+        .logo {
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            font-size: 2rem;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+        }
+        .logo-sub {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            letter-spacing: 0.3px;
+            background: rgba(255,255,255,0.15);
+            padding: 5px 12px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+
+        .search-area {
+            display: flex;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 8px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+        }
+
+        .search-area input {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 60px;
+            padding: 12px 20px;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            width: 220px;
+            transition: 0.2s;
+            outline: none;
+        }
+
+        .search-area input:focus {
+            background: rgba(255, 255, 255, 0.25);
+            width: 260px;
+        }
+
+        .search-area input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-area button {
+            background: #3b82f6;
+            border: none;
+            border-radius: 50px;
+            width: 48px;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: 0.2s;
+        }
+
+        .search-area button:hover {
+            background: #2563eb;
+            transform: scale(0.96);
+        }
+
+        .dynamic-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .now-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.85));
+            backdrop-filter: blur(18px);
+            border-radius: 56px;
+            padding: 32px 36px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 25px 40px -16px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s;
+        }
+
+        .city-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .city-name {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .weather-icon-main {
+            width: 90px;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.3));
+        }
+
+        .temp-big {
+            font-size: 5rem;
+            font-weight: 800;
+            margin: 12px 0 8px;
+            line-height: 1;
+        }
+
+        .condition-text {
+            font-size: 1.4rem;
+            opacity: 0.85;
+            margin-bottom: 24px;
+            text-transform: capitalize;
+        }
+
+        .extra-details {
+            display: flex;
+            gap: 36px;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 22px;
+            margin-top: 8px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .scroll-section {
+            margin: 16px 0 8px;
+        }
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 20px;
+            padding: 0 6px;
+        }
+
+        .section-title h3 {
+            font-weight: 700;
+            font-size: 1.7rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .scroll-hint {
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+
+        .horizontal-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 20px;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 16px;
+            scrollbar-width: thin;
+        }
+
+        .horizontal-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .horizontal-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .horizontal-scroll::-webkit-scrollbar-thumb {
+            background: #38bdf8;
+            border-radius: 10px;
+        }
+
+        .forecast-card {
+            flex: 0 0 200px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            border-radius: 42px;
+            padding: 20px 12px;
+            text-align: center;
+            scroll-snap-align: start;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.25s ease;
+        }
+
+        .forecast-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        .forecast-day {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+        }
+
+        .forecast-icon {
+            width: 60px;
+            margin: 10px auto;
+        }
+
+        .forecast-temp {
+            font-size: 1.9rem;
+            font-weight: 700;
+        }
+
+        .forecast-desc {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .facts-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 18px;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 12px;
+        }
+
+        .fact-item {
+            flex: 0 0 260px;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: 0.2s;
+        }
+
+        .fact-item:hover {
+            background: rgba(59,130,246,0.3);
+        }
+
+        .fact-icon {
+            font-size: 2.4rem;
+        }
+
+        .fact-text {
+            font-weight: 500;
+            font-size: 1rem;
+            line-height: 1.3;
+        }
+
+        .advice-card {
+            background: rgba(59, 130, 246, 0.2);
+            backdrop-filter: blur(12px);
+            border-radius: 50px;
+            padding: 20px 28px;
+            border-left: 6px solid #38bdf8;
+            transition: 0.2s;
+        }
+
+        .error-banner {
+            background: #ef4444cc;
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
+            padding: 18px 24px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .skeleton-pulse {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        body.light-mode {
+            background: #eef2ff;
+            color: #0f172a;
+        }
+
+        body.light-mode .glass-header,
+        body.light-mode .now-card,
+        body.light-mode .forecast-card,
+        body.light-mode .fact-item,
+        body.light-mode .advice-card {
+            background: rgba(255, 255, 255, 0.75);
+            border-color: rgba(0, 0, 0, 0.15);
+            color: #0f172a;
+        }
+
+        body.light-mode .search-area input {
+            background: white;
+            color: #0f172a;
+        }
+
+        body.light-mode .search-area input::placeholder {
+            color: #4b5563;
+        }
+
+        body.light-mode .scroll-hint {
+            background: rgba(0,0,0,0.1);
+        }
+
+        body.light-mode .logo-sub {
+            background: rgba(0,0,0,0.1);
+            color: #0f172a;
+        }
+
+        .theme-btn-floating {
+            position: fixed;
+            bottom: 28px;
+            right: 32px;
+            background: rgba(59, 130, 246, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            color: white;
+            font-size: 1.6rem;
+            cursor: pointer;
+            z-index: 99;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            transition: 0.2s;
+        }
+
+        .theme-btn-floating:hover {
+            transform: scale(1.05);
+            background: #2563eb;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.5;
+            margin-top: 24px;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeSlide 0.45s ease forwards;
+        }
+
+        @media (min-width: 1200px) {
+            .app-wrapper {
+                width: 88%;
+                max-width: 1500px;
+            }
+            .forecast-card {
+                flex: 0 0 220px;
+            }
+            .fact-item {
+                flex: 0 0 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-wrapper {
+                width: 95%;
+                padding: 16px;
+            }
+            .city-name {
+                font-size: 1.9rem;
+            }
+            .temp-big {
+                font-size: 3.6rem;
+            }
+            .section-title h3 {
+                font-size: 1.3rem;
+            }
+            .forecast-card {
+                flex: 0 0 150px;
+            }
+            .glass-header {
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <div class="glass-header">
+        <div class="logo">
+            <i class="fas fa-cloud-sun-rain logo-icon"></i>
+            <span class="logo-sub">погода · вдохновение</span>
+        </div>
+        <div class="search-area">
+            <input type="text" id="citySearchInput" placeholder="Москва, Лондон, Токио...">
+            <button id="searchBtnHeader"><i class="fas fa-search"></i></button>
+        </div>
+    </div>
+
+    <div id="dynamicContent" class="dynamic-grid"></div>
+    <footer>✨ Листай прогноз → интересные факты • погода с душой</footer>
+</div>
+
+<button class="theme-btn-floating" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+
+<script>
+    const API_KEY = "e15e1c3aa7284a78987151934261605";
+    let currentCity = "Нижний Новгород";
+
+    const dynamicContainer = document.getElementById("dynamicContent");
+    const citySearchInput = document.getElementById("citySearchInput");
+    const searchBtn = document.getElementById("searchBtnHeader");
+    const themeBtn = document.getElementById("themeToggleBtn");
+
+    // Функция для замены страны Russia на Россия
+    function getRussianCountryName(countryName) {
+        if (countryName === "Russia") {
+            return "Россия";
+        }
+        return countryName;
+    }
+
+    function getRussianCityName(engName) {
+        const map = {
+            "moscow": "Москва",
+            "saint petersburg": "Санкт-Петербург",
+            "nizhny novgorod": "Нижний Новгород",
+            "london": "Лондон",
+            "paris": "Париж",
+            "berlin": "Берлин",
+            "rome": "Рим",
+            "madrid": "Мадрид",
+            "prague": "Прага",
+            "warsaw": "Варшава",
+            "kyiv": "Киев",
+            "minsk": "Минск",
+            "new york": "Нью-Йорк",
+            "tokyo": "Токио",
+            "beijing": "Пекин",
+            "bangkok": "Бангкок",
+            "istanbul": "Стамбул",
+            "oslo": "Осло",
+            "stockholm": "Стокгольм"
+        };
+        const lower = engName.toLowerCase();
+        return map[lower] || engName;
+    }
+
+    function translateToEnglish(rusName) {
+        const trans = {
+            "москва": "Moscow",
+            "санкт-петербург": "Saint Petersburg",
+            "спб": "Saint Petersburg",
+            "нижний новгород": "Nizhny Novgorod",
+            "лондон": "London",
+            "париж": "Paris",
+            "берлин": "Berlin",
+            "рим": "Rome",
+            "мадрид": "Madrid",
+            "прага": "Prague",
+            "варшава": "Warsaw",
+            "киев": "Kyiv",
+            "минск": "Minsk",
+            "нью-йорк": "New York",
+            "токио": "Tokyo",
+            "пекин": "Beijing"
+        };
+        const lower = rusName.trim().toLowerCase();
+        return trans[lower] || rusName.trim();
+    }
+
+    function showSkeleton() {
+        dynamicContainer.innerHTML = `
+            <div class="now-card skeleton-pulse" style="min-height: 240px;"></div>
+            <div class="scroll-section">
+                <div class="section-title"><h3><i class="fas fa-calendar-week"></i> Прогноз на 5 дней</h3><span class="scroll-hint">→ листай вправо →</span></div>
+                <div class="horizontal-scroll">
+                    ${Array(5).fill().map(() => `<div class="forecast-card skeleton-pulse" style="height: 190px;"></div>`).join('')}
+                </div>
+            </div>
+            <div class="scroll-section">
+                <div class="section-title"><h3><i class="fas fa-lightbulb"></i> Факты о погоде</h3><span class="scroll-hint">свайп →</span></div>
+                <div class="facts-scroll">
+                    ${Array(3).fill().map(() => `<div class="fact-item skeleton-pulse" style="width: 220px; height: 80px;"></div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderFullWeather(data) {
+        const location = data.location;
+        const current = data.current;
+        const forecastDays = data.forecast.forecastday;
+        const cityRu = getRussianCityName(location.name);
+        // Заменяем Russia на Россия
+        const country = getRussianCountryName(location.country);
+        const temp = Math.round(current.temp_c);
+        const condition = current.condition.text;
+        const iconUrl = "https:" + current.condition.icon;
+        const wind = current.wind_kph;
+        const humidity = current.humidity;
+        const feelsLike = Math.round(current.feelslike_c);
+
+        const nowHtml = `
+            <div class="now-card animate-in">
+                <div class="city-header">
+                    <span class="city-name"><i class="fas fa-map-pin"></i> ${cityRu}, ${country}</span>
+                    <img class="weather-icon-main" src="${iconUrl}" alt="weather icon">
+                </div>
+                <div class="temp-big">${temp}°C</div>
+                <div class="condition-text">${condition}</div>
+                <div class="extra-details">
+                    <div class="detail-item"><i class="fas fa-temperature-low"></i> По ощущению: ${feelsLike}°</div>
+                    <div class="detail-item"><i class="fas fa-wind"></i> Ветер: ${wind} км/ч</div>
+                    <div class="detail-item"><i class="fas fa-tint"></i> Влажность: ${humidity}%</div>
+                </div>
+            </div>
+        `;
+
+        let forecastHtml = `<div class="scroll-section"><div class="section-title"><h3><i class="fas fa-cloud-sun"></i> Прогноз на 5 дней</h3><span class="scroll-hint"><i class="fas fa-arrow-right"></i> листай →</span></div><div class="horizontal-scroll">`;
+        forecastDays.forEach(day => {
+            const date = new Date(day.date);
+            const weekDay = date.toLocaleDateString('ru-RU', { weekday: 'short' });
+            const dayNum = date.getDate();
+            const month = date.toLocaleDateString('ru-RU', { month: 'short' });
+            const avgTemp = Math.round(day.day.avgtemp_c);
+            const desc = day.day.condition.text;
+            const iconFore = "https:" + day.day.condition.icon;
+            forecastHtml += `
+                <div class="forecast-card">
+                    <div class="forecast-day">${weekDay}, ${dayNum} ${month}</div>
+                    <img class="forecast-icon" src="${iconFore}" alt="forecast icon">
+                    <div class="forecast-temp">${avgTemp}°</div>
+                    <div class="forecast-desc">${desc}</div>
+                </div>
+            `;
+        });
+        forecastHtml += `</div></div>`;
+
+        // Заменил смайлик радуги 🌈 на тучку с дождём 🌧️
+        const funFacts = [
+            { icon: "fas fa-umbrella", text: "☔ Дождь очищает воздух от пыли и аллергенов" },
+            { icon: "fas fa-tree", text: "🌳 Леса увеличивают локальные осадки до 30%" },
+            { icon: "fas fa-snowflake", text: "❄️ Рекорд холода: −89.2°C в Антарктиде" },
+            { icon: "fas fa-sun", text: "☀️ За час Солнце даёт энергии больше, чем всё человечество за год" },
+            { icon: "fas fa-cloud-rain", text: "🌧️ Капли дождя имеют разную форму в зависимости от размера" },
+            { icon: "fas fa-wind", text: "💨 Самый сильный ветер: 408 км/ч (тропический циклон)" },
+            { icon: "fas fa-cloud-moon", text: "🌙 В безоблачную ночь температура падает быстрее" }
+        ];
+        let factsHtml = `<div class="scroll-section"><div class="section-title"><h3><i class="fas fa-brain"></i> Метео-факты</h3><span class="scroll-hint">→ листай →</span></div><div class="facts-scroll">`;
+        funFacts.forEach(fact => {
+            factsHtml += `
+                <div class="fact-item">
+                    <i class="${fact.icon} fact-icon"></i>
+                    <span class="fact-text">${fact.text}</span>
+                </div>
+            `;
+        });
+        factsHtml += `</div></div>`;
+
+        let adviceMsg = "";
+        if (temp > 28) adviceMsg = "☀️ Жарко! Пей воду, носи головной убор и избегай солнца в полдень.";
+        else if (temp < 2) adviceMsg = "🧣 Холодно! Одевайся по погоде, ветер может усиливать мороз.";
+        else if (condition.includes("дождь") || condition.includes("ливень")) adviceMsg = "🌂 Дождь? Не забудь зонт и влагозащитную обувь.";
+        else if (condition.includes("снег")) adviceMsg = "❄️ Снегопад — отличное время для прогулки, но будь осторожен на дорогах.";
+        else adviceMsg = "✨ Отличная погода! Выходи на улицу, дыши свежим воздухом и наслаждайся моментом.";
+
+        const adviceBlock = `
+            <div class="advice-card animate-in">
+                <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+                    <i class="fas fa-comment-dots" style="font-size: 2.2rem;"></i>
+                    <span style="font-weight: 600; font-size: 1.05rem;">${adviceMsg}</span>
+                </div>
+            </div>
+        `;
+
+        dynamicContainer.innerHTML = nowHtml + forecastHtml + factsHtml + adviceBlock;
+        const allCards = document.querySelectorAll('.now-card, .forecast-card, .fact-item, .advice-card');
+        allCards.forEach((el, idx) => {
+            el.style.animation = `fadeSlide 0.4s ease forwards ${idx * 0.02}s`;
+        });
+    }
+
+    async function fetchWeather(cityInput) {
+        if (!cityInput.trim()) {
+            showErrorMsg("🌍 Введите название города (например, Москва)");
+            return;
+        }
+        showSkeleton();
+        const cityForApi = translateToEnglish(cityInput);
+        const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${cityForApi}&days=5&lang=ru`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.error) {
+                showErrorMsg(`❌ ${data.error.message}. Попробуйте написать город на русском или английском.`);
+                return;
+            }
+            renderFullWeather(data);
+        } catch (err) {
+            console.error(err);
+            showErrorMsg("⚠️ Ошибка соединения. Проверьте интернет или попробуйте позже.");
+        }
+    }
+
+    function showErrorMsg(msg) {
+        dynamicContainer.innerHTML = `
+            <div class="error-banner animate-in">
+                <i class="fas fa-exclamation-triangle"></i> ${msg}
+            </div>
+            <div class="now-card" style="text-align:center; margin-top: 20px;">
+                🌟 Популярные города: Москва, Санкт-Петербург, Париж, Лондон, Токио
+            </div>
+        `;
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        const icon = themeBtn.querySelector('i');
+        if (document.body.classList.contains('light-mode')) {
+            icon.className = "fas fa-sun";
+        } else {
+            icon.className = "fas fa-moon";
+        }
+    }
+
+    function handleSearch() {
+        let val = citySearchInput.value.trim();
+        if (val === "") val = currentCity;
+        currentCity = val;
+        fetchWeather(val);
+    }
+
+    window.onload = () => {
+        citySearchInput.value = "Нижний Новгород";
+        fetchWeather("Нижний Новгород");
+        searchBtn.addEventListener("click", handleSearch);
+        citySearchInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") handleSearch();
+        });
+        themeBtn.addEventListener("click", toggleTheme);
+    };
+</script>
+</body>
+</html>
